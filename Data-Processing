@@ -1,0 +1,19 @@
+// 1.1   Create directories in hdfs to store the csv
+hadoop fs -mkdir/user/cloudera/data1
+hadoop fs -mkdir data1/Testing
+hadoop fs -mkdir data1/CovidIndia
+
+
+//1.2  Copy the files from local to hdfs
+hadoop fs -put Downloads/StatewiseTestingDetails.csv/user/cloudera/data1/Testing
+hadoop fs -put Downloads/Covid19_india.csv/user/cloudera/data1/CovidIndia
+
+
+//1.3 Visualize the content of the files in hdfs
+hadoop fs -cat data1/Testing/StatewiseTestingDetails.csv|head
+hadoop fs -ca tdata1/Co vidIndia/Cov id19_india.csv|head
+
+
+//1.4 Verify number of records in two files
+hadoop fs -cat data1/Testing/StatewiseTestingDetails.csv|wc-l
+hadoop fs -cat data1/CovidIndia/Covid19_india.csv|wc-1
