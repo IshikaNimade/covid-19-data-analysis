@@ -1,0 +1,25 @@
+// 1.5 Sqoop Export of data from hdfs to Mysql
+
+
+sqoop export\
+-Dhadoop.security.credential.provider.path=jceks://hdfs /user/cloudera/encryptpswd/jceks_pswdfile\
+--connect jdbc:mysql://quickstart.cloudera:3306/test_db\
+--username root\
+--password-aliasmysql.test_db.securepassword\
+--table State_Testing\
+--staging -table State_Testing_Stage \
+--clear -staging -table\
+--export -dir /user/cloudera/data1/Testing\
+--fields -terminated -by ','
+
+
+sqoop export\
+-Dhadoop.security.credential.provider.path=jceks://hdfs /user/cloudera/encryptpswd/jceks_pswdfile\
+--connect jdbc:mysql://quickstart.cloudera:3306/test_db\
+--username root\
+--password -alias mysql.test_db.securepassword\
+--table Covid_India\
+--staging -table Covid_India_Stage\
+--clear -staging -table\
+--export -dir /user/cloudera/data1/CovidIndia\
+--fields -terminated -by ','
