@@ -1,0 +1,51 @@
+// Sqoop Import -From Mysql to HDFS :
+The tables State_Testing, Covid_India will be sqoop imported with Incremental in append mode,
+as data goes on adding to the tables on daily basis. So we create a saved sqoop job for both.
+Also password encryption has been used,with default compression gzip.
+A directory named sqoop_imported is created in hdfs for storing the sqoop imported data from two tables.
+
+
+//Sqoop job Creation for State_Testing table
+sqoop job\
+-Dhadoop.security.credential.provider.path=jceks://hdfs /user/cloudera/encryptpswd/jceks_pswdfile\
+--create job_testing details_inc\
+--import\
+--connect jdbc:mysql://quickstart.cloudera:3306/test_db\
+--username root\
+--password-aliasmysql.test_db.securepassword\
+--tableState_Testing \
+--warehouse -dir/user/cloudera/data1/sqoop_imported\
+--split -by seq\
+--incremental append\
+--check -column seq\
+--last -value0\
+--compress
+
+//Execute the saved job
+sqoop job --exec job_testingdetails_inc
+
+//HDFS View
+hadoop fs -ls /user/cloudera/data1/sqoop_imported/State_ Testing
+
+
+
+//Sqoop job Creation for Cov id_India table
+sqoop job \
+-Dhadoop.security.credential.provider.path=jceks://hdfs /user/cloudera/encryptpswd/jceks_pswdfile\
+--create job_covid details_inc\
+--import\
+--connect jdbc:mysql://quickstart.cloudera:3306/test_db\
+--username root\
+--password -alias mysql.test_db.securepassword\
+--table Covid_India\
+--warehouse -dir /user/cloudera/data1/sqoop _imported\
+--split -by sno \
+--incremental append\
+--check -column sno \
+--last -value0\
+--compress
+
+//Execute the saved job
+sqoop job --exec job_coviddetails_inc
+
+
