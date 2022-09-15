@@ -1,0 +1,42 @@
+// 1.4 Creation of Tables in Mysql
+
+
+//table 1--State_Testing
+create table IF NOT EXISTS State_Testing(
+seq INT NOT NULL PRIMARY KEY,
+date VARCHAR(30),
+state VARCHAR(50) NOT NULL,
+total_samples INT,
+negative INT,
+positive INT);
+
+
+//table 2--State_Testing_stage
+create table IF NOT EXISTS State_Testing_Stage(
+seq INT NOT NULL PRIMARY KEY,
+date VARCHAR(30),
+state VARCHAR(50) NOT NULL,
+total_samples INT,
+negative INT,
+positive INT) ;
+
+
+
+//table 3--Covid_India
+create table IF NOT EXISTS Covid_India(
+sno INT NOT NULL PRIMARY KEY,
+date VARCHAR(30),
+state VARCHAR(50) NOT NULL,
+cured INT,
+deaths INT,
+confirmed INT);
+
+
+//table 4--Covid_India_Stage
+create table IF NOT EXISTS Covid_India_Stage(
+sno INT NOT NULL PRIMARY KEY,
+date VARCHAR(30), 
+state VARCHAR(50) NOT NULL,
+cured INT,
+deaths INT,
+confirmed INT);
