@@ -1,0 +1,18 @@
+//Creation of Hive Managed HBase Table
+
+CREATE TABLE cov(rkey string,state string,date date,
+total_samples int,negative int,positive int,cured int,deaths int,confirmed int)
+STORED BY'org.apache.hadoop.hive.hbase.HBase Storage Handler' with
+SERDEPROPERTIES("hbase.columns.mapping" =":key, testing: state,testing: date,testing: total_samples, testing: negative,
+testing: positive,covidcases: cured,covidcases: deaths,covidcases: confirmed")
+TBLPROPERTIES("hbase.table.name"="cov_hbase ");
+
+//Insert data into HBase table Managed by Hive by loading the output of mapside join operation into the hbase table
+
+insert overwrite table cov 
+SELECT /*+MAP JOIN(T)*/
+concat(T.state,'_',T.date)as 
+rkey,T.state,T.date,T.total_samples,T.negative,T.positive,
+C.cured,C.deaths,C.confirmed
+FROM State_Testing_ORC T JOIN Covid_India_ORC C 
+ON(C.state=T.state)AND(C.date=T.date); 
