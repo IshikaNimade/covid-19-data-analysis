@@ -1,0 +1,104 @@
+//step1: Create Hive External Tables on top of data in HDFS
+
+create database if not exists covid_india;
+use covid_india;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS State_Testing(
+seq INT,
+date STRING,
+state STRING,
+total_samples INT,
+negative INT,
+positive INT)
+COMMENT 'Table to store StatewiseTestingDetails'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE LOCATION '/user/cloudera/data1/sqoop _imported/State_Testing';
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Covid_India(
+sno INT,
+date STRING,
+state STRING,
+cured INT,
+deaths INT,
+confirmed INT)
+COMMENT 'Table to store StatewiseCovidCountDetails'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY','
+STORED AS TEXTFILE LOCATION '/user/cloudera/data1/sqoop _imported/Covid_India';
+
+
+
+//step2: Create Optimized External tables in Hive
+
+
+//CREATE DIRECTORIES IN HDFS for the Dynamically created Partitions
+hadoop fs -mkdir /user/cloudera/data1/partitions_testing
+hadoop fs -mkdir /user/cloudera/data1/partitions_covidindia
+
+
+//Enabling Dynamic Partitioning and Bucketing in Hive
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.enforce.bucketing=true;
+
+
+//ORC EXTERNAL TABLE CREATION IN HIVE
+
+CREATE EXTERNAL TABLE IF NOT EXISTS State_Testing_ORC(
+seq INT,
+date DATE ,
+total_samples INT,
+negative INT,
+positive INT)
+PARTITIONED BY(state STRING)
+CLUSTERED BY(date) into 4 BUCKETS
+STORED AS ORC LOCATION '/user/cloudera/data1/partitions_testing'
+TBLPROPERTI ES('orc.compress'='SNAPPY');
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Covid_India_ORC(
+sno INT,date STRING,cured INT,deaths INT,confirmed INT)
+PARTITIONED BY(state STRING)
+CLUSTERED BY(date)into  4 BUCKETS 
+STORED AS ORC LOCATION '/user/cloudera/data1/partitions_covidindia'
+TBLPROPERTIES('orc.compress'='SNAPPY');
+
+
+//step3: : Load data to the optimized hive tables from normal hive table
+
+INSERT OVERWRITE TABLE State_Testing_ORC 
+PARTITION(state)
+SELECT 
+seq ,from _unixtime(unix_timestamp(date,'M/dd/yyyy'),'yyyy-MM-dd'),
+total_samples,negative,positive,state 
+FROM State_Testing;
+
+
+INSERT OVERWRITE TABLE Covid_India_ORC 
+PARTITION(state)
+SELECT 
+sno,from _unixtime(unix_timestamp(date,'dd/M/yy'),'yyyy-MM-dd'),
+cured,deaths,confirmed,state
+FROM Covid_India;
+
+
+
+//step4: Inner Join two tables in Hive and get a consolidated table using Map-Side Join
+
+set hive.auto.convert.join=false;
+set hive.ignore.mapjoin.hint=false;
+
+SELECT /*+MAPJOIN(T) */
+T.state,T.date,T.total_samples,T.negative,T.positive,
+C.cured,C.deaths,C.confirmed
+FROM State_Testing_ORC T 
+JOIN Covid_India_ORC C
+ON (C.state=T.state);
+
+//step5: create a final consolidated table as follows:
+CREATE TABLE covid_details 
+AS SELECT /*+MAP JOIN(T)*/
+T.state,T.date,T.total_samples,T.negative,T.positive,
+C.cured,C.deaths,C.confirmed
+FROM State_Testing_ORC T JOIN Covid_India_ORC C 
+ON (C.state=T.state)AND(C.date=T.date);
